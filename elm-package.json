@@ -1,7 +1,7 @@
 {
     "version": "0.0.0",
     "summary": "Nori",
-    "repository": "https://github.com/shybyte/nori",
+    "repository": "https://github.com/shybyte/nori.git",
     "license": "BSD3",
     "source-directories": [
         "."
