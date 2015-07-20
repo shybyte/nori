@@ -7,9 +7,11 @@ import Json.Decode as Json exposing ((:=))
 import String
 import Task exposing (..)
 
+port setText : Signal (String)
+
 -- VIEW
 
-view : String -> Result String (List String) -> Html
+view : String -> Result String (String) -> Html
 view string result =
   let field =
         input
@@ -20,15 +22,15 @@ view string result =
           ]
           []
 
-      messages =
+      resultMessage =
         case result of
           Err msg ->
-              [ div [ myStyle ] [ text msg ] ]
+              div [ myStyle ] [ text msg ]
 
           Ok cities ->
-              List.map (\city -> div [ myStyle ] [ text city ]) cities
+              div [ myStyle ] [  text cities]
   in
-      div [] (field :: messages)
+      div [] (field :: [resultMessage])
 
 
 myStyle : Attribute
@@ -41,7 +43,6 @@ myStyle =
     , ("text-align", "center")
     ]
 
-
 -- WIRING
 
 main =
@@ -53,7 +54,7 @@ query =
   Signal.mailbox "I love you"
 
 
-results : Signal.Mailbox (Result String (List String))
+results : Signal.Mailbox (Result String (String))
 results =
   Signal.mailbox (Err "Is this a english word?")
 
@@ -64,15 +65,18 @@ port requests =
     |> Signal.map (\task -> Task.toResult task `andThen` Signal.send results.address)
 
 
-lookupZipCode : String -> Task String (List String)
+lookupZipCode : String -> Task String (String)
 lookupZipCode query =
   let toUrl =
         if String.length query > 0
           then succeed ("http://localhost:3000/phonemes/" ++ query)
           else fail "Give me some english words!"
   in
-      toUrl `andThen` (mapError (always "Not found :(") << Http.get arpabet)
+      toUrl `andThen` (mapError (always "Not found :(") << Http.getString)
 
 
-arpabet : Json.Decoder (List String)
-arpabet = Json.list Json.string
+
+
+--arpabet = Json.list Json.string
+--arpabet : Json.Decoder (String)
+--arpabet = Json.string
