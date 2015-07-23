@@ -22,30 +22,20 @@ view string result =
           [ placeholder "English Words"
           , value string
           , on "input" targetValue (Signal.message query.address)
-          , myStyle
+          , class "myStyle"
           ]
           []
 
       resultMessage =
         case result of
           Err msg ->
-              div [ myStyle ] [ text msg ]
+              div [ class "myStyle" ] [ text msg ]
 
           Ok cities ->
-              div [ myStyle ] [  text cities]
+              div [ class "myStyle" ] [  text cities]
   in
       div [] (field :: [resultMessage])
 
-
-myStyle : Attribute
-myStyle =
-  style
-    [ ("width", "100%")
-    , ("height", "40px")
-    , ("padding", "10px 0")
-    , ("font-size", "2em")
-    , ("text-align", "center")
-    ]
 
 -- WIRING
 
