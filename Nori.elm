@@ -35,8 +35,12 @@ view string result =
 
           Ok cities ->
               div [ class "myStyle" ] [  text cities]
+
+      speakButton =
+        button [onClick speakButtonMailbox.address ()] [text "Speak"]
+
   in
-      div [] (field :: [resultMessage])
+      div [] [field, resultMessage, speakButton]
 
 
 -- WIRING
@@ -49,6 +53,18 @@ query : Signal.Mailbox String
 query =
   Signal.mailbox "I love you"
 
+speakButtonMailbox : Signal.Mailbox ()
+speakButtonMailbox =
+  Signal.mailbox ()
+
+
+
+port speakPort : Signal String
+port speakPort =
+    Signal.sampleOn speakButtonMailbox.signal signalText
+
+signalText : Signal String
+signalText = Signal.map (\s -> Result.toMaybe s |> Maybe.withDefault "") results.signal
 
 results : Signal.Mailbox (Result String (String))
 results =

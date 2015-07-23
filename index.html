@@ -22,6 +22,10 @@
         nori.ports.setText.send("I love you Nora");
     },2000);
 
+    nori.ports.speakPort.subscribe(function (phonemes) {
+        console.log('Speaking: ', phonemes);
+    });
+
 </script>
 
 </body>
