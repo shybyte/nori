@@ -9,6 +9,10 @@ import Task exposing (..)
 
 port setText : Signal (String)
 
+port setTextTasks : Signal (Task x ())
+port setTextTasks = Signal.map (Signal.send query.address) setText
+
+
 -- VIEW
 
 view : String -> Result String (String) -> Html

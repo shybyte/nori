@@ -16,6 +16,11 @@
 
     // embed our Elm program in that <div>
     var nori = Elm.embed(Elm.Main, div, {setText: 'Hello'});
+
+    setTimeout(function () {
+        nori.ports.setText.send("I love you Nora");
+    },1000);
+
 </script>
 
 </body>
