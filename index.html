@@ -16,7 +16,7 @@
     var div = document.getElementById('app');
 
     // embed our Elm program in that <div>
-    var nori = Elm.embed(Elm.Main, div, {setText: 'Hello'});
+    var nori = Elm.embed(Elm.Nori, div, {setText: 'Hello'});
 
     setTimeout(function () {
         nori.ports.setText.send("I love you Nora");

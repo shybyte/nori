@@ -4,7 +4,7 @@ var gulp = require('gulp'),
     livereload = require('gulp-livereload');
 
 gulp.task('compile', shell.task([
-  'elm-make Main.elm'
+  'elm-make Nori.elm'
 ]))
 
 gulp.task('reload', function () {

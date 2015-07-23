@@ -1,3 +1,5 @@
+module Nori where
+
 import Char
 import Html exposing (..)
 import Html.Attributes as Attr exposing (..)
