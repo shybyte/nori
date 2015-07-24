@@ -5,90 +5,126 @@ import Html exposing (..)
 import Html.Attributes as Attr exposing (..)
 import Html.Events exposing (..)
 import Http
+import Debug
 import Json.Decode as Json exposing ((:=))
 import String
 import Task exposing (..)
 
-port setText : Signal (String)
+------------- MODEL ------------
 
-port setTextTasks : Signal (Task x ())
-port setTextTasks = Signal.map (Signal.send query.address) setText
+type alias Model = {
+  text: String,
+  phonemes: List (List String)
+}
+
+initialModel : Model
+initialModel =
+  {
+    text = "I love you",
+    phonemes = [["AY"],["L", "AH", "V"], ["Y", "UW"]]
+  }
 
 
--- VIEW
 
-view : String -> Result String (String) -> Html
-view string result =
+------------- ACTIONS ------------
+
+type Action =
+  NoOp |
+  Speak |
+  SetPhonemes (List (List String)) |
+  SetText String
+
+update : Action -> Model -> Model
+update action model =
+  case action of
+    NoOp -> model
+    Speak -> model
+    SetText text -> {model | text <- text}
+    SetPhonemes phonemes -> {model | phonemes <- phonemes}
+
+isSpeakAction : Action -> Bool
+isSpeakAction action =
+ case action of
+  Speak -> True
+  _ -> False
+
+------------- VIEWS ------------
+
+view : Signal.Address Action -> Model -> Html
+view address model =
   let field =
         input
           [ placeholder "English Words"
-          , value string
-          , on "input" targetValue (Signal.message query.address)
+          , value model.text
+          , on "input" targetValue (Signal.message address << SetText)
           , class "myStyle"
           ]
           []
 
       resultMessage =
-        case result of
-          Err msg ->
-              div [ class "myStyle" ] [ text msg ]
-
-          Ok cities ->
-              div [ class "myStyle" ] [  text cities]
+          div [ class "myStyle" ] [  text (flatListListToString model.phonemes)]
 
       speakButton =
-        button [onClick speakButtonMailbox.address ()] [text "Speak"]
+        button [onClick address Speak] [text "Speak"]
 
   in
       div [] [field, resultMessage, speakButton]
 
 
--- WIRING
 
+------------- Wiring ------------
+
+actions : Signal.Mailbox Action
+actions =
+  Signal.mailbox NoOp
+
+main : Signal Html
 main =
-  Signal.map2 view query.signal results.signal
+  Signal.map (view actions.address) model
+
+model : Signal Model
+model =
+  Signal.foldp update initialModel (Signal.map (Debug.log "Action")  actions.signal)
 
 
-query : Signal.Mailbox String
-query =
-  Signal.mailbox "I love you"
 
-speakButtonMailbox : Signal.Mailbox ()
-speakButtonMailbox =
-  Signal.mailbox ()
-
-
+------------- Interaction with Nori-Voice (Javascript) ------------
 
 port speakPort : Signal String
 port speakPort =
-    Signal.sampleOn speakButtonMailbox.signal signalText
+    Signal.sampleOn (Signal.filter isSpeakAction NoOp actions.signal) (Signal.map (.phonemes >> flatListListToString) model)
 
-signalText : Signal String
-signalText = Signal.map (\s -> Result.toMaybe s |> Maybe.withDefault "") results.signal
 
-results : Signal.Mailbox (Result String (String))
-results =
-  Signal.mailbox (Err "Is this a english word?")
 
+------------- Http Requests ------------
 
 port requests : Signal (Task x ())
 port requests =
-  Signal.map lookupZipCode query.signal
-    |> Signal.map (\task -> Task.toResult task `andThen` Signal.send results.address)
+  Signal.map lookupPhonemes (Signal.dropRepeats (Signal.map .text model))
+    |> Signal.map (\task -> Task.toResult task `andThen` sendResult)
 
+sendResult : (Result String (List (List String))) -> Task x ()
+sendResult = resultToAction >> Signal.send actions.address
 
-lookupZipCode : String -> Task String (String)
-lookupZipCode query =
+resultToAction : Result.Result String (List (List String)) -> Action
+resultToAction result = SetPhonemes (Maybe.withDefault [["AY"]] (Result.toMaybe result))
+
+lookupPhonemes : String -> Task String (List (List String))
+lookupPhonemes query =
   let toUrl =
         if String.length query > 0
           then succeed ("http://localhost:3000/phonemes/" ++ query)
           else fail "Give me some english words!"
   in
-      toUrl `andThen` (mapError (always "Not found :(") << Http.getString)
+        toUrl `andThen` (mapError (always "Not found :(") << Http.get arpabet)
+
+
+arpabet : Json.Decoder (List (List String))
+arpabet = Json.list (Json.list Json.string)
 
 
 
+------------- UTILS ------------
 
---arpabet = Json.list Json.string
---arpabet : Json.Decoder (String)
---arpabet = Json.string
+flatListListToString : List (List String) -> String
+flatListListToString list = String.join " " (List.map (String.join "") list)

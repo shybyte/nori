@@ -7,23 +7,23 @@
 </head>
 <body>
 <h1>Nori</h1>
+
 <div id="app"></div>
 
 
+<script type="text/javascript" src="http://localhost:3001/bower_components/ramda/dist/ramda.js"></script>
+<script type="text/javascript" src="http://localhost:3001/scripts/nori-facade.js"></script>
 <script type="text/javascript" src="elm.js"></script>
 <script type="text/javascript">
     // get an empty <div>
     var div = document.getElementById('app');
 
     // embed our Elm program in that <div>
-    var nori = Elm.embed(Elm.Nori, div, {setText: 'Hello'});
+    var noriUI = Elm.embed(Elm.Nori, div, {});
 
-    setTimeout(function () {
-        nori.ports.setText.send("I love you Nora");
-    },2000);
-
-    nori.ports.speakPort.subscribe(function (phonemes) {
+    noriUI.ports.speakPort.subscribe(function (phonemes) {
         console.log('Speaking: ', phonemes);
+        nori.facade.sing(phonemes + " ", phonemes.length / 10 * 1000 + 1000, 170);
     });
 
 </script>

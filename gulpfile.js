@@ -21,7 +21,7 @@ gulp.task('watch', function () {
     }
   });
   gulp.watch('*.elm', ['compile', 'reload', browserSync.reload]);
-  gulp.watch(['*.css', '*.html'], [browserSync.reload]);
+  //gulp.watch(['*.css', '*.html'], [browserSync.reload]);
 });
 
 gulp.task('default', ['compile','watch']);
