@@ -10,6 +10,8 @@ import Json.Decode as Json exposing ((:=))
 import String
 import Task exposing (..)
 import Time
+import Random
+import Array
 
 ------------- MODEL ------------
 
@@ -17,7 +19,8 @@ type alias Model = {
   text: String,
   currentWord: Maybe SingingWord,
   phonemes: List (List String),
-  phonemesToPlay: List (List String)
+  phonemesToPlay: List (List String),
+  randomSeed: Random.Seed
 }
 
 type alias SingingWord = {
@@ -28,12 +31,25 @@ type alias SingingWord = {
 initialModel : Model
 initialModel =
   {
-    text = "I love you",
+    text = "I love you and you love me too",
     currentWord = Nothing,
     phonemes = [],
-    phonemesToPlay = []
+    phonemesToPlay = [],
+    randomSeed = Random.initialSeed 123
   }
 
+simpleScale = Array.fromList [0, 2, 5, 8, 10]
+
+scalePosToMidi : Int -> Array.Array Int -> Int
+scalePosToMidi pos scale =
+  let
+    scaleLen = Array.length scale
+    octave = pos // scaleLen
+    remainder = pos % scaleLen
+  in
+    Array.get (remainder) scale
+    |> Maybe.withDefault 0
+    |> (+) (octave * 12)
 
 
 ------------- ACTIONS ------------
@@ -58,19 +74,18 @@ update action model =
 tick : Model -> Model
 tick model =
   let
+    (randomInt,randomSeed') =
+      Random.generate (Random.int 0 5) model.randomSeed
     newWord =
       case model.phonemesToPlay of
         [] -> Nothing
-        list -> Just { text = nextWord list, freq = 220}
+        list -> Just { text = nextWord list, freq = midiToFreq(50 + (scalePosToMidi randomInt simpleScale))}
   in
     { model |
         currentWord <- newWord,
-        phonemesToPlay <- Maybe.withDefault [] (List.tail model.phonemesToPlay)
+        phonemesToPlay <- Maybe.withDefault [] (List.tail model.phonemesToPlay),
+        randomSeed <- randomSeed'
     }
-
-
-nextWord : List (List String) -> String
-nextWord phonemes =  String.join "" (Maybe.withDefault [""] (List.head phonemes))
 
 ------------- VIEWS ------------
 
@@ -159,3 +174,19 @@ arpabet = Json.list (Json.list Json.string)
 
 flatListListToString : List (List String) -> String
 flatListListToString list = String.join " " (List.map (String.join "") list)
+
+
+nextWord : List (List String) -> String
+nextWord phonemes =
+  List.head phonemes
+    |> Maybe.withDefault [""]
+    |> List.map makeUSoundLong
+    |> String.join ""
+
+
+makeUSoundLong s =
+  if String.startsWith "U" s then "2" ++ s else s
+
+
+midiToFreq : Int -> Float
+midiToFreq midiNote = (440.0 / 32.0) * (2.0 ^ (((toFloat midiNote) - 9.0) / 12.0))
