@@ -9,19 +9,29 @@ import Debug
 import Json.Decode as Json exposing ((:=))
 import String
 import Task exposing (..)
+import Time
 
 ------------- MODEL ------------
 
 type alias Model = {
   text: String,
-  phonemes: List (List String)
+  currentWord: Maybe SingingWord,
+  phonemes: List (List String),
+  phonemesToPlay: List (List String)
+}
+
+type alias SingingWord = {
+  text: String,
+  freq: Float
 }
 
 initialModel : Model
 initialModel =
   {
     text = "I love you",
-    phonemes = [["AY"],["L", "AH", "V"], ["Y", "UW"]]
+    currentWord = Nothing,
+    phonemes = [],
+    phonemesToPlay = []
   }
 
 
@@ -30,6 +40,7 @@ initialModel =
 
 type Action =
   NoOp |
+  Tick |
   Speak |
   SetPhonemes (List (List String)) |
   SetText String
@@ -37,16 +48,29 @@ type Action =
 update : Action -> Model -> Model
 update action model =
   case action of
-    NoOp -> model
-    Speak -> model
     SetText text -> {model | text <- text}
     SetPhonemes phonemes -> {model | phonemes <- phonemes}
+    Tick -> tick model
+    Speak -> {model | phonemesToPlay <- model.phonemes}
+    otherwise -> model
 
-isSpeakAction : Action -> Bool
-isSpeakAction action =
- case action of
-  Speak -> True
-  _ -> False
+
+tick : Model -> Model
+tick model =
+  let
+    newWord =
+      case model.phonemesToPlay of
+        [] -> Nothing
+        list -> Just { text = nextWord list, freq = 220}
+  in
+    { model |
+        currentWord <- newWord,
+        phonemesToPlay <- Maybe.withDefault [] (List.tail model.phonemesToPlay)
+    }
+
+
+nextWord : List (List String) -> String
+nextWord phonemes =  String.join "" (Maybe.withDefault [""] (List.head phonemes))
 
 ------------- VIEWS ------------
 
@@ -87,12 +111,19 @@ model =
   Signal.foldp update initialModel (Signal.map (Debug.log "Action")  actions.signal)
 
 
+------------- Timer ------------
+
+tickSignal = Time.every Time.second
+port ticksTask : Signal (Task x ())
+port ticksTask =
+  Signal.map (\time -> Signal.send actions.address Tick) tickSignal
 
 ------------- Interaction with Nori-Voice (Javascript) ------------
 
-port speakPort : Signal String
+port speakPort : Signal (Maybe SingingWord)
 port speakPort =
-    Signal.sampleOn (Signal.filter isSpeakAction NoOp actions.signal) (Signal.map (.phonemes >> flatListListToString) model)
+    Signal.map .currentWord model
+    --Signal.sampleOn (Signal.filter isSpeakAction NoOp actions.signal) (Signal.map (.phonemes >> flatListListToString) model)
 
 
 

@@ -21,9 +21,11 @@
     // embed our Elm program in that <div>
     var noriUI = Elm.embed(Elm.Nori, div, {});
 
-    noriUI.ports.speakPort.subscribe(function (phonemes) {
-        console.log('Speaking: ', phonemes);
-        nori.facade.sing(phonemes + " ", phonemes.length / 10 * 1000 + 1000, 170);
+    noriUI.ports.speakPort.subscribe(function (singingWord) {
+        if (singingWord) {
+            console.log('Singing: ', singingWord);
+            nori.facade.sing(singingWord.text + " ", singingWord.freq);
+        }
     });
 
 </script>

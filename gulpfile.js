@@ -16,6 +16,7 @@ gulp.task('watch', function () {
   livereload.listen();
   browserSync({
     open: false,
+    port: 3003,
     server: {
       baseDir: ["."],
     }
