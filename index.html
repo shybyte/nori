@@ -11,24 +11,19 @@
 <div id="app"></div>
 
 
-<script type="text/javascript" src="http://localhost:3001/bower_components/ramda/dist/ramda.js"></script>
-<script type="text/javascript" src="http://localhost:3001/scripts/nori-facade.js"></script>
+ <!--midi.js and poyfills -->
+<script src="bower_components/midi/inc/shim/Base64.js" type="text/javascript"></script>
+<script src="bower_components/midi/inc/shim/Base64binary.js" type="text/javascript"></script>
+<script src="bower_components/midi/inc/shim/WebAudioAPI.js" type="text/javascript"></script>
+<script type="text/javascript" src="bower_components/midi/build/MIDI.js"></script>
+
+<!-- nori-voice -->
+<script type="text/javascript" src="http://localhost:3010/bower_components/ramda/dist/ramda.js"></script>
+<script type="text/javascript" src="http://localhost:3010/scripts/nori-facade.js"></script>
+
+<!-- nori -->
 <script type="text/javascript" src="elm.js"></script>
-<script type="text/javascript">
-    // get an empty <div>
-    var div = document.getElementById('app');
-
-    // embed our Elm program in that <div>
-    var noriUI = Elm.embed(Elm.Nori, div, {});
-
-    noriUI.ports.speakPort.subscribe(function (singingWord) {
-        if (singingWord) {
-            console.log('Singing: ', singingWord);
-            nori.facade.sing(singingWord.text + " ", singingWord.freq);
-        }
-    });
-
-</script>
+<script type="text/javascript" src="js/nori.js"></script>
 
 </body>
 </html>

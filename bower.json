@@ -1,0 +1,14 @@
+{
+  "name": "nori",
+  "version": "0.0.0",
+  "authors": [
+    "Marco Stahl"
+  ],
+  "license": "AGPL",
+  "private": true,
+  "dependencies": {
+    "midi": "*"
+  },
+  "devDependencies": {
+  }
+}

@@ -16,13 +16,16 @@ gulp.task('watch', function () {
   livereload.listen();
   browserSync({
     open: false,
-    port: 3003,
+    port: 3020,
+    ui: {
+      port: 3021
+    },
     server: {
       baseDir: ["."],
     }
   });
   gulp.watch('*.elm', ['compile', 'reload', browserSync.reload]);
-  //gulp.watch(['*.css', '*.html'], [browserSync.reload]);
+  gulp.watch(['*.css', '*.html', 'js/*.js'], browserSync.reload);
 });
 
 gulp.task('default', ['compile','watch']);
