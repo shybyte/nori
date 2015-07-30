@@ -18,23 +18,11 @@ function startNori() {
     if (midiCommand) {
       console.log('Playing: ', midiCommand);
       var delay = 0.15;
-      MIDI.noteOn(0, midiCommand.note, 40, delay);
+      MIDI.noteOn(0, midiCommand.note, 20, delay);
       MIDI.noteOff(0, midiCommand.note, delay + 0.75);
     }
   });
 }
-
-function playTestSound() {
-  var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  var oscillator = audioCtx.createOscillator();
-  var gainNode = audioCtx.createGain();
-  oscillator.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-  oscillator.type = 'sine'; // sine wave — other values are 'square', 'sawtooth', 'triangle' and 'custom'
-  oscillator.frequency.value = 40; // value in hertz
-  oscillator.start();
-}
-
 
 MIDI.loadPlugin({
   soundfontUrl: "./bower_components/midi/examples/soundfont/",
@@ -44,7 +32,22 @@ MIDI.loadPlugin({
   },
   onsuccess: function () {
     MIDI.setVolume(0, 127);
-    noriVoice = nori.facade.startNoriVoice();
+
+    MIDI.setEffects([]);
+
+    var audioContext = MIDI.getContext();
+    var tuna = new Tuna(audioContext);
+
+    var delay = new tuna.Delay({
+      feedback: 0.45,    //0 to 1+
+      delayTime: 250,    //how many milliseconds should the wet signal be delayed?
+      wetLevel: 0.45,    //0 to 1+
+      dryLevel: 1,       //0 to 1+
+      cutoff: 2000,      //cutoff frequency of the built in lowpass-filter. 20 to 22050
+      bypass: 0
+    });
+
+    noriVoice = nori.facade.startNoriVoice(audioContext, [delay]);
     startNori();
   }
 });

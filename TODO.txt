@@ -1,7 +1,6 @@
 Doing:
 
 TODO:
-  * Add reverb/delay to nori-voice
   * Play whole song with one chord per Line
 
 
@@ -9,3 +8,4 @@ Done:
  * Add Midi.js (bower)
  * Play Simple Midi Piano with every word
  * Play Simple Midi Piano Pattern
+ * Add reverb/delay to nori-voice
