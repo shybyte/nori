@@ -17,8 +17,9 @@ function startNori() {
   noriUI.ports.midiPort.subscribe(function (midiCommand) {
     if (midiCommand) {
       console.log('Playing: ', midiCommand);
-      MIDI.noteOn(0, midiCommand.note, 40, 0);
-      MIDI.noteOff(0, midiCommand.note, 0.75);
+      var delay = 0.15;
+      MIDI.noteOn(0, midiCommand.note, 40, delay);
+      MIDI.noteOff(0, midiCommand.note, delay + 0.75);
     }
   });
 }

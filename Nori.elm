@@ -16,7 +16,9 @@ import Array
 ------------- MODEL ------------
 
 type alias Model = {
+  tickCount: Int,
   text: String,
+  baseNote: Int,
   currentWord: Maybe SingingWord,
   midiCommand: Maybe MidiCommand,
   phonemes: List (List String),
@@ -36,7 +38,9 @@ type alias MidiCommand = {
 initialModel : Model
 initialModel =
   {
+    tickCount = 0,
     text = "I love you and you love me too",
+    baseNote = 50,
     currentWord = Nothing,
     midiCommand = Nothing,
     phonemes = [],
@@ -57,6 +61,9 @@ scalePosToMidi pos scale =
     |> Maybe.withDefault 0
     |> (+) (octave * 12)
 
+pattern: Array.Array Int
+pattern = Array.fromList([0, 7, 12, 7])
+
 
 ------------- ACTIONS ------------
 
@@ -73,7 +80,7 @@ update action model =
     SetText text -> {model | text <- text}
     SetPhonemes phonemes -> {model | phonemes <- phonemes}
     Tick -> tick model
-    Speak -> {model | phonemesToPlay <- model.phonemes}
+    Speak -> {model | phonemesToPlay <- model.phonemes, tickCount <- 0}
     otherwise -> model
 
 
@@ -82,25 +89,46 @@ tick model =
   let
     (randomInt,randomSeed') =
       Random.generate (Random.int 0 5) model.randomSeed
+
     midiNote =
       scalePosToMidi randomInt simpleScale + 50
+
+    baseNote' =
+        if model.tickCount % 8 == 0 then
+          midiNote
+        else
+          model.baseNote
+
     newWord =
-      case model.phonemesToPlay of
-        [] -> Nothing
-        list -> Just { text = nextWord list, freq = midiToFreq(midiNote)}
+      if model.tickCount % 4 == 0 then
+        case model.phonemesToPlay of
+          [] -> (Nothing)
+          list -> Just { text = nextWord list, freq = midiToFreq(midiNote)}
+      else
+        Nothing
+
+    phonemesToPlay' =
+          if model.tickCount % 4 == 0 then
+            Maybe.withDefault [] (List.tail model.phonemesToPlay)
+          else
+            model.phonemesToPlay
+
     newMidiCommand =
       if List.isEmpty model.phonemesToPlay then
         Nothing
       else
-        Just {note = midiNote}
+        Just {note = baseNote' - 12 + (Array.get (model.tickCount % 4) pattern |> Maybe.withDefault 0 )}
 
   in
     { model |
+        tickCount <- model.tickCount + 1,
+        baseNote <- baseNote',
         midiCommand <-  newMidiCommand,
         currentWord <- newWord,
-        phonemesToPlay <- Maybe.withDefault [] (List.tail model.phonemesToPlay),
+        phonemesToPlay <- phonemesToPlay',
         randomSeed <- randomSeed'
     }
+
 
 ------------- VIEWS ------------
 
@@ -143,7 +171,7 @@ model =
 
 ------------- Timer ------------
 
-tickSignal = Time.every Time.second
+tickSignal = Time.every (250 * Time.millisecond)
 port ticksTask : Signal (Task x ())
 port ticksTask =
   Signal.map (\time -> Signal.send actions.address Tick) tickSignal
@@ -202,7 +230,7 @@ nextWord phonemes =
 
 
 makeUSoundLong s =
-  if String.startsWith "U" s then "2" ++ s else s
+  if String.startsWith "U" s then "4" ++ s else s
 
 
 midiToFreq : Int -> Float
