@@ -18,6 +18,7 @@ import Array
 type alias Model = {
   text: String,
   currentWord: Maybe SingingWord,
+  midiCommand: Maybe MidiCommand,
   phonemes: List (List String),
   phonemesToPlay: List (List String),
   randomSeed: Random.Seed
@@ -28,17 +29,22 @@ type alias SingingWord = {
   freq: Float
 }
 
+type alias MidiCommand = {
+  note: Int
+}
+
 initialModel : Model
 initialModel =
   {
     text = "I love you and you love me too",
     currentWord = Nothing,
+    midiCommand = Nothing,
     phonemes = [],
     phonemesToPlay = [],
     randomSeed = Random.initialSeed 123
   }
 
-simpleScale = Array.fromList [0, 2, 5, 8, 10]
+simpleScale = Array.fromList [0, 2, 4, 7, 9]
 
 scalePosToMidi : Int -> Array.Array Int -> Int
 scalePosToMidi pos scale =
@@ -76,12 +82,21 @@ tick model =
   let
     (randomInt,randomSeed') =
       Random.generate (Random.int 0 5) model.randomSeed
+    midiNote =
+      scalePosToMidi randomInt simpleScale + 50
     newWord =
       case model.phonemesToPlay of
         [] -> Nothing
-        list -> Just { text = nextWord list, freq = midiToFreq(50 + (scalePosToMidi randomInt simpleScale))}
+        list -> Just { text = nextWord list, freq = midiToFreq(midiNote)}
+    newMidiCommand =
+      if List.isEmpty model.phonemesToPlay then
+        Nothing
+      else
+        Just {note = midiNote}
+
   in
     { model |
+        midiCommand <-  newMidiCommand,
         currentWord <- newWord,
         phonemesToPlay <- Maybe.withDefault [] (List.tail model.phonemesToPlay),
         randomSeed <- randomSeed'
@@ -140,7 +155,9 @@ port speakPort =
     Signal.map .currentWord model
     --Signal.sampleOn (Signal.filter isSpeakAction NoOp actions.signal) (Signal.map (.phonemes >> flatListListToString) model)
 
-
+port midiPort : Signal (Maybe MidiCommand)
+port midiPort =
+    Signal.map .midiCommand model
 
 ------------- Http Requests ------------
 
