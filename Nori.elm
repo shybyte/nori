@@ -87,7 +87,7 @@ generateTrack phonemeLyrics seed =
         |> Array.fromList
     }
   in
-    [pianoChannel, celloChannel, voiceChannel]
+    [pianoChannel, voiceChannel]
 
 majorScaleChords = Array.fromList [0, 2, 4, 5, 7, 8]
 
@@ -161,7 +161,13 @@ generateCelloLine baseNote length =
   |> List.concat
 
 simpleNote midiNote = [{pitch= midiNote, phonemes=[]}]
-simpleVoiceNote midiNote phonemes= [{pitch= midiNote, phonemes=phonemes}]
+simpleVoiceNote midiNote phonemes=
+  [
+    {
+      pitch= midiNote,
+      phonemes= List.map makeVocalLonger phonemes
+    }
+  ]
 
 type alias PhonemeLyrics = List PhonemeLine
 type alias PhonemeLine = List PhonemeWord
@@ -183,17 +189,17 @@ textBla = """Wise men say
 fools rush in
 you will stay
 joy and sin
+You like ice
+I love you
+This is nice
+Love me too
 """
 
 initialModel : Model
 initialModel =
   {
     tickCount = 0,
-    text = """Wise men say
-fools rush in
-you will stay
-joy and sin
-""",
+    text = textBla,
     seed = "123",
     track = [],
     midiCommands = [],
@@ -378,17 +384,17 @@ arpabet = Json.list (Json.list (Json.list Json.string))
 flatListListToString : List (List String) -> String
 flatListListToString list = String.join " " (List.map (String.join "") list)
 
-nextWord : List (List String) -> String
-nextWord phonemes =
-  List.head phonemes
-    |> Maybe.withDefault [""]
-    |> List.map makeUSoundLong
-    |> String.join ""
+vocalDuration s =
+  case s of
+    "UW" -> 2
+    "AY" -> 2
+    "EY" -> 4
+    "OY" -> 2
+    "IH" -> 2
+    otherwise -> 1
 
-
-makeUSoundLong s =
-  if String.startsWith "U" s then "4" ++ s else s
-
+makeVocalLonger s =
+  (vocalDuration s |> toString) ++ s
 
 parseInt: Int -> String -> Int
 parseInt defaultInt s=

@@ -40,7 +40,7 @@ MIDI.loadPlugin({
   onsuccess: function () {
     MIDI.programChange(0, 0);
     MIDI.programChange(1, 42);  //cello
-    MIDI.setVolume(0, 100);
+    MIDI.setVolume(0, 60);
     MIDI.setEffects([]);
 
     var audioContext = MIDI.getContext();
@@ -48,8 +48,8 @@ MIDI.loadPlugin({
 
     var delay = new tuna.Delay({
       feedback: 0.45,    //0 to 1+
-      delayTime: 250,    //how many milliseconds should the wet signal be delayed?
-      wetLevel: 0.45,    //0 to 1+
+      delayTime: 350,    //how many milliseconds should the wet signal be delayed?
+      wetLevel: 0.55,    //0 to 1+
       dryLevel: 1,       //0 to 1+
       cutoff: 2000,      //cutoff frequency of the built in lowpass-filter. 20 to 22050
       bypass: 0
