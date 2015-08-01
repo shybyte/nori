@@ -4,8 +4,8 @@ h1 {
     padding: 0;
 }
 
-.myStyle {
+textarea {
     width: 100%;
-    padding: 1px 0;
-    text-align: center;
+    box-sizing: border-box;
+    padding: 0.5em;
 }
