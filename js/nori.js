@@ -22,22 +22,25 @@ function startNori() {
         }
       } else {
         var delay = 0.15;
-        MIDI.noteOn(0, midiCommand.note, 20, delay);
-        MIDI.noteOff(0, midiCommand.note, delay + 0.75);
+        MIDI.noteOn(midiCommand.channel, midiCommand.note, (midiCommand.channel + 1)*60 , delay);
+        MIDI.noteOff(midiCommand.channel, midiCommand.note, delay + 0.75 + midiCommand.channel);
       }
     });
   });
 }
 
 MIDI.loadPlugin({
-  soundfontUrl: "./bower_components/midi/examples/soundfont/",
-  instrument: "acoustic_grand_piano",
+  //soundfontUrl: "./bower_components/midi/examples/soundfont/",
+  soundfontUrl: "soundfont/",
+  instrument: ["acoustic_grand_piano", "cello"],
+  //instrument: "banjo",
   onprogress: function (state, progress) {
     console.log(state, progress);
   },
   onsuccess: function () {
-    MIDI.setVolume(0, 127);
-
+    MIDI.programChange(0, 0);
+    MIDI.programChange(1, 42);  //cello
+    MIDI.setVolume(0, 100);
     MIDI.setEffects([]);
 
     var audioContext = MIDI.getContext();

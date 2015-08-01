@@ -1,9 +1,8 @@
 Doing:
 
 
+
 TODO:
-   * Install cello
-   * Add Cello channel
    * Longer vocals
 
 Done:
@@ -12,3 +11,5 @@ Done:
    * Play Simple Midi Piano Pattern
    * Add reverb/delay to nori-voice
    * Play whole song with one chord per Line
+   * Install cello
+   * Add Cello channel

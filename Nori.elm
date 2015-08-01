@@ -65,6 +65,18 @@ generateTrack phonemeLyrics seed =
         |> Array.fromList
     }
 
+    celloChannel = {
+      midiChannel = 1,
+      notes =
+        [0..lineNumber-1]
+        |> List.map
+          (\ln ->
+            generateCelloLine (38 + (Array.get (ln % 4) chords |> Maybe.withDefault 0)) 16
+          )
+        |> List.concat
+        |> Array.fromList
+    }
+
     voiceChannel : Channel
     voiceChannel = {
       midiChannel = 16,
@@ -75,7 +87,7 @@ generateTrack phonemeLyrics seed =
         |> Array.fromList
     }
   in
-    [pianoChannel, voiceChannel]
+    [pianoChannel, celloChannel, voiceChannel]
 
 majorScaleChords = Array.fromList [0, 2, 4, 5, 7, 8]
 
@@ -134,6 +146,20 @@ generateLine baseNote length =
   |> List.concat
   |> List.map ((+) baseNote)
 
+generateCelloLine : MidiNote -> Int -> List (List Note)
+generateCelloLine baseNote length =
+  [
+    [[{pitch=baseNote, phonemes=[]}]],
+    List.repeat (length//4-1) [],
+    [[{pitch= baseNote+7, phonemes=[]}]],
+    List.repeat (length//4-1) [],
+    [[{pitch=baseNote+12, phonemes=[]}]],
+    List.repeat (length//4-1) [],
+    [[{pitch= baseNote+7, phonemes=[]}]],
+    List.repeat (length//4-1) []
+  ]
+  |> List.concat
+
 simpleNote midiNote = [{pitch= midiNote, phonemes=[]}]
 simpleVoiceNote midiNote phonemes= [{pitch= midiNote, phonemes=phonemes}]
 
@@ -152,6 +178,12 @@ type alias MidiCommand = {
   note: Int,
   phonemes: String
 }
+
+textBla = """Wise men say
+fools rush in
+you will stay
+joy and sin
+"""
 
 initialModel : Model
 initialModel =
